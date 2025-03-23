@@ -1,43 +1,39 @@
 import streamlit as st
+import nltk
 from transformers import pipeline
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
-# Load a pre-trained Question Answering model
-qa_pipeline = pipeline("question-answering", model="deepset/roberta-base-squad2")
 
-# Define healthcare-specific response logic
+chatbot = pipeline("text-generation", model="distilgpt2")
+
 def healthcare_chatbot(user_input):
-    context = (
-        "Healthcare is essential for well-being. If you have symptoms, consult a doctor. "
-        "You can schedule appointments at hospitals or clinics. Medications should be taken as prescribed by a healthcare provider. "
-        "A balanced diet, regular exercise, and mental health care are also important for overall health."
-    )
-    
-    if "symptom" in user_input.lower():
-        return "It seems like you're experiencing symptoms. Please consult a doctor for accurate advice."
-    elif "appointment" in user_input.lower():
-        return "Would you like me to help schedule an appointment with a doctor?"
-    elif "medication" in user_input.lower():
-        return "It's important to take your prescribed medications regularly. If you have concerns, consult your doctor."
+    if "symptoms" in user_input:
+        return "Please consult a Doctor for accurate advice"
+    elif "appointment" in user_input:
+        return "would you like to schedule an appointment with the doctor"
+    elif "medication" in user_input:
+        return "it's a important to take prescribe medicines regulary. If you have any concerns please consult a doctor "
     else:
-        result = qa_pipeline(question=user_input, context=context)
-        return result["answer"]
-
-# Streamlit web app interface
-def main():
-    st.set_page_config(page_title="Healthcare Chatbot", page_icon="🩺")
+        response = chatbot(user_input,max_length = 500, num_return_sequences=1)
+    return response[0]['generated_text']
     
-    st.title("🩺 Healthcare Assistant Chatbot")
-    st.markdown("💡 **Ask me about symptoms, medications, or appointments.**")
-
-    user_input = st.text_area("How can I assist you today?", "")
-
-    if st.button("Submit"):
-        if user_input.strip():
-            st.markdown(f"**🗣️ User:** {user_input}")
-            response = healthcare_chatbot(user_input)
-            st.markdown(f"**🤖 Healthcare Assistant:** {response}")
+    
+def main():
+    st.set_page_config(page_title="Healthcare Chatbot", page_icon="💊")
+    st.title("Healthcare Assistant Chatbot")
+    user_input = st.text_input("How can I assist you today?")
+    print(user_input)
+    if st.button("submit"):
+        if user_input:
+            st.write("👩 user : ",user_input)
+            with st.spinner("Processing your query,Please wait...."):
+                response = healthcare_chatbot(user_input)
+            st.write("🌸 Healthcare Assistant :",response)
+            print(response)
         else:
-            st.warning("⚠️ Please enter a valid query.")
+            st.write("Please enter a message to get a response")
+    
 
-if __name__ == "__main__":
-    main()
+main()
+
